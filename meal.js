@@ -12,6 +12,28 @@ const favoritesElement = document.querySelector('.favorites')
 const searchBtn = document.querySelector('#search');
 const searchTerm = document.querySelector('#search-term');
 
+function initMain()
+{
+    getRandomMeal();
+    updateFavoriteMeals();
+
+    searchBtn.addEventListener('click', async () => {
+        const searchWord = searchTerm.value;
+
+        const meals = await getMealsBySearch(searchWord);
+        console.log(meals); // Log the retrieved meals to the console
+
+        mealsElement.innerHTML = "";
+
+        if(meals)
+        {
+            for (let i=0; i<meals.length; i++)
+            {
+                addMeal(meals[i]);
+            }
+        }
+    });
+}
 async function getRandomMeal() {
     const resp = await fetch('https://www.themealdb.com/api/json/v1/1/random.php');
     console.log(resp);
@@ -21,37 +43,18 @@ async function getRandomMeal() {
     console.log(randomMeal);
 
     mealsElement.innerHTML = "";
-    addMeal(randomMeal);
+    addMeal(randomMeal, true);
 }
 
-
-getRandomMeal();
-updateFavoriteMeals();
-
-searchBtn.addEventListener('click', async () => {
-    const searchWord = searchTerm.value;
-
-    const meals = await getMealsBySearch(searchWord);
-    console.log(meals); // Log the retrieved meals to the console
-
-    mealsElement.innerHTML = "";
-
-    if(meals)
-    {
-        for (let i=0; i<meals.length; i++)
-        {
-            addMeal(meals[i]);
-        }
-    }
-});
-
-function addMeal(mealData)
+function addMeal(mealData, random=false)
 {
     const meal = document.createElement("div");
     meal.classList.add("meal");
 
     meal.innerHTML = `<div class="meal-header">
-                        <span class="random">Meal of the Day</span>
+                        ${
+                        random?`<span class="random">Meal of the Day</span>`:""
+                        }
                         <img src="${mealData.strMealThumb}" alt="${mealData.strMeal}">
                     </div>
                     <div class="meal-body">
@@ -79,6 +82,11 @@ function addMeal(mealData)
         updateFavoriteMeals();
     } )
     mealsElement.appendChild(meal);
+
+    const mealHeader = meal.querySelector(".meal-header");
+    mealHeader.addEventListener("click", () => {
+        openMealDetailsPage(mealData);
+    })
 }
 
 
@@ -138,6 +146,11 @@ function addMealToFavorites(mealData)
          updateFavoriteMeals();
      })
     favoritesElement.appendChild(favoriteMeal)
+
+    const favId = favoriteMeal.querySelector("#fav-img");
+    favId.addEventListener("click", () => {
+        openMealDetailsPage(mealData);
+    })
 }
 
 async function getMealsBySearch(term)
@@ -149,4 +162,60 @@ async function getMealsBySearch(term)
     const meals = respData.meals;
 
     return meals;
+}
+
+function openMealDetailsPage(mealData)
+{
+    window.open("details.html?mealId="+mealData.idMeal,"_self");
+}
+
+function initDetailsPage ()
+{
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log(urlParams);
+    const mealId = urlParams.get('mealId');
+    console.log(mealId);
+
+    showMealDetails(mealId);
+}
+
+async function showMealDetails(mealId)
+{
+    let tmpMeal = await getMealByID(mealId); 
+    console.log(tmpMeal);
+
+    const ingredients = [];
+    for(let i=1; i<=20; i++)
+    {
+        
+        console.log(tmpMeal['strIngredient' +i]);
+        console.log(tmpMeal['strMeasure'+i]);
+
+        ingredients.push(`${tmpMeal['strIngredient' +i]}/${tmpMeal['strMeasure'+i]}`)
+
+    }
+
+    // for (let i=0; i<ingredients.length; i++)
+    // {
+    //     console.log(ingredients[i]);
+    // }
+
+    const mealDetailsContainer = document.querySelector('.meal-container')
+
+    mealDetailsContainer.innerHTML = `
+    <a href="meal.html">Home</a>
+    <div class="meal-info">
+        <div>
+            <h1>${tmpMeal.strMeal}</h1>
+            <img src=${tmpMeal.strMealThumb} alt=${tmpMeal.strMeal}>
+        </div>
+        <div>
+            <p>${tmpMeal.strInstructions}</p>
+                <ul>
+                    <li>Ingredient /measure</li>
+                    <li>Ingredient /measure</li>
+                    <li>Ingredient /measure</li>
+                </ul>
+        </div>
+    </div>`;
 }
