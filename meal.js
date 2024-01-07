@@ -9,6 +9,8 @@
 
 const mealsElement = document.getElementById("meals");
 const favoritesElement = document.querySelector('.favorites')
+const searchBtn = document.querySelector('#search');
+const searchTerm = document.querySelector('#search-term');
 
 async function getRandomMeal() {
     const resp = await fetch('https://www.themealdb.com/api/json/v1/1/random.php');
@@ -22,7 +24,26 @@ async function getRandomMeal() {
     addMeal(randomMeal);
 }
 
+
 getRandomMeal();
+updateFavoriteMeals();
+
+searchBtn.addEventListener('click', async () => {
+    const searchWord = searchTerm.value;
+
+    const meals = await getMealsBySearch(searchWord);
+    console.log(meals); // Log the retrieved meals to the console
+
+    mealsElement.innerHTML = "";
+
+    if(meals)
+    {
+        for (let i=0; i<meals.length; i++)
+        {
+            addMeal(meals[i]);
+        }
+    }
+});
 
 function addMeal(mealData)
 {
@@ -69,9 +90,9 @@ function addMealToLocalStorage(mealId)
 function removeMealFromLocalStorage(mealId)
 {
     const mealIds = getMealsFromLocalStorage();
-    localStorage.setItem('mealIds', JSON.stringify());
-        mealIds.filter(id => id != mealId )
-  
+    localStorage.setItem('mealIds', JSON.stringify(
+        mealIds.filter(id => id != mealId)
+    ))
 }
 
 function getMealsFromLocalStorage()
@@ -111,6 +132,21 @@ function addMealToFavorites(mealData)
                                 <span>${mealData.strMeal}</span>
                                 <button class="clear"><i class="fas fa-window-close"></i></button>
                             `
-
+    const ClearBtn = favoriteMeal.querySelector('.clear');
+    ClearBtn.addEventListener("click", () => {
+         removeMealFromLocalStorage(mealData.idMeal);
+         updateFavoriteMeals();
+     })
     favoritesElement.appendChild(favoriteMeal)
+}
+
+async function getMealsBySearch(term)
+{
+    const resp = await fetch('https://www.themealdb.com/api/json/v1/1/search.php?s=' + term);
+
+    const respData = await resp.json ();
+
+    const meals = respData.meals;
+
+    return meals;
 }
