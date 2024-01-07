@@ -188,11 +188,12 @@ async function showMealDetails(mealId)
     for(let i=1; i<=20; i++)
     {
         
-        console.log(tmpMeal['strIngredient' +i]);
-        console.log(tmpMeal['strMeasure'+i]);
-
+        // console.log(tmpMeal['strIngredient' +i]);
+        // console.log(tmpMeal['strMeasure'+i]);
+        if(tmpMeal['strIngredient' +i])
+        {
         ingredients.push(`${tmpMeal['strIngredient' +i]}/${tmpMeal['strMeasure'+i]}`)
-
+        }
     }
 
     // for (let i=0; i<ingredients.length; i++)
@@ -212,9 +213,11 @@ async function showMealDetails(mealId)
         <div>
             <p>${tmpMeal.strInstructions}</p>
                 <ul>
-                    <li>Ingredient /measure</li>
-                    <li>Ingredient /measure</li>
-                    <li>Ingredient /measure</li>
+                    ${
+                        ingredients.map(
+                            item => `<li>${item}</li>`).join("")
+                        
+                    }
                 </ul>
         </div>
     </div>`;
